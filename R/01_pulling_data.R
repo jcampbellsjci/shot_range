@@ -75,4 +75,5 @@ traditional_df <- map_df(traditional_list,
 # Combining shot range and traditional data
 combo <- shot_range_df %>%
   inner_join(traditional_df %>%
-               select(player_id, pts))
+               select(player_id, pts, gp, fg_pct, ftm, fta, ft_pct)) %>%
+  select(-c(fgm_backcourt:fg_pct_backcourt))
