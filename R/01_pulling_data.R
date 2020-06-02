@@ -29,6 +29,12 @@ shot_range_raw <- GET(shot_range_url, add_headers(.headers = headers))$content %
   rawToChar() %>%
   fromJSON()
 
+# Also pulling totals from shot range data
+range_totals_url <- "https://stats.nba.com/stats/leaguedashplayershotlocations?College=&Conference=&Country=&DateFrom=&DateTo=&DistanceRange=By+Zone&Division=&DraftPick=&DraftYear=&GameScope=&GameSegment=&Height=&LastNGames=0&LeagueID=00&Location=&MeasureType=Base&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=Totals&Period=0&PlayerExperience=&PlayerPosition=&PlusMinus=N&Rank=N&Season=2019-20&SeasonSegment=&SeasonType=Regular+Season&ShotClockRange=&StarterBench=&TeamID=0&VsConference=&VsDivision=&Weight="
+range_totals_raw <- GET(range_totals_url, add_headers(.headers = headers))$content %>%
+  rawToChar() %>%
+  fromJSON()
+
 # Pulling traditional data
 # Mainly want PPG from here
 traditional_url <- "https://stats.nba.com/stats/leaguedashplayerstats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&GameSegment=&Height=&LastNGames=0&LeagueID=00&Location=&MeasureType=Base&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=PerGame&Period=0&PlayerExperience=&PlayerPosition=&PlusMinus=N&Rank=N&Season=2019-20&SeasonSegment=&SeasonType=Regular+Season&ShotClockRange=&StarterBench=&TeamID=0&TwoWay=0&VsConference=&VsDivision=&Weight="
@@ -52,16 +58,23 @@ column_names_shot_range <- tolower(c(
 
 # Making any element that is NULL NA
 shot_range_list <- map(shot_range_raw$resultSets$rowSet,
-                       function(x) map(x,
-                                       function(y) ifelse(is.null(y), NA, y)))
+                       function(x)
+                         map(x, function(y) ifelse(is.null(y), NA, y)))
+range_totals_list <- map(range_totals_raw$resultSets$rowSet,
+                         function(x)
+                           map(x, function(y) ifelse(is.null(y), NA, y)))
 
 # Setting names of each element
 shot_range_list <- map(shot_range_list,
                        ~ set_names(., column_names_shot_range))
+range_totals_list <- map(range_totals_list,
+                         ~ set_names(., column_names_shot_range))
 
 # Binding elements into a tibble
 shot_range_df <- map_df(shot_range_list,
                         ~ bind_rows(.))
+range_totals_df <- map_df(range_totals_list,
+                          ~ bind_rows(.))
 
 # Setting column names for traditional data set
 traditional_list <- map(traditional_raw$resultSets[[1]]$rowSet,
@@ -74,6 +87,10 @@ traditional_df <- map_df(traditional_list,
 
 # Combining shot range and traditional data
 combo <- shot_range_df %>%
+  inner_join(traditional_df %>%
+               select(player_id, pts, gp, fg_pct, ftm, fta, ft_pct)) %>%
+  select(-c(fgm_backcourt:fg_pct_backcourt))
+combo_totals <- range_totals_df %>%
   inner_join(traditional_df %>%
                select(player_id, pts, gp, fg_pct, ftm, fta, ft_pct)) %>%
   select(-c(fgm_backcourt:fg_pct_backcourt))
