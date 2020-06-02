@@ -41,6 +41,10 @@ traditional_url <- "https://stats.nba.com/stats/leaguedashplayerstats?College=&C
 traditional_raw <- GET(traditional_url, add_headers(.headers = headers))$content %>%
   rawToChar() %>%
   fromJSON()
+traditional_totals_url <- "https://stats.nba.com/stats/leaguedashplayerstats?College=&Conference=&Country=&DateFrom=&DateTo=&Division=&DraftPick=&DraftYear=&GameScope=&GameSegment=&Height=&LastNGames=0&LeagueID=00&Location=&MeasureType=Base&Month=0&OpponentTeamID=0&Outcome=&PORound=0&PaceAdjust=N&PerMode=Totals&Period=0&PlayerExperience=&PlayerPosition=&PlusMinus=N&Rank=N&Season=2019-20&SeasonSegment=&SeasonType=Regular+Season&ShotClockRange=&StarterBench=&TeamID=0&TwoWay=0&VsConference=&VsDivision=&Weight="
+traditional_totals_raw <- GET(traditional_totals_url, add_headers(.headers = headers))$content %>%
+  rawToChar() %>%
+  fromJSON()
 
 
 #### Cleaning raw data ####
@@ -80,10 +84,15 @@ range_totals_df <- map_df(range_totals_list,
 traditional_list <- map(traditional_raw$resultSets[[1]]$rowSet,
                         ~ set_names(., tolower(
                           traditional_raw$resultSets[[1]]$headers)))
+traditional_totals_list <- map(traditional_totals_raw$resultSets[[1]]$rowSet,
+                               ~ set_names(., tolower(
+                                 traditional_totals_raw$resultSets[[1]]$headers)))
 
 # Binding traditional list into a tibble
 traditional_df <- map_df(traditional_list,
                          ~ bind_rows(.))
+traditional_totals_df <- map_df(traditional_totals_list,
+                                ~ bind_rows(.))
 
 # Combining shot range and traditional data
 combo <- shot_range_df %>%
@@ -91,6 +100,7 @@ combo <- shot_range_df %>%
                select(player_id, pts, gp, fg_pct, ftm, fta, ft_pct)) %>%
   select(-c(fgm_backcourt:fg_pct_backcourt))
 combo_totals <- range_totals_df %>%
-  inner_join(traditional_df %>%
-               select(player_id, pts, gp, fg_pct, ftm, fta, ft_pct)) %>%
+  inner_join(traditional_totals_df %>%
+               select(player_id, pts, gp, fgm, fga, fg_pct,
+                      fg3m, fg3a, fg3_pct, ftm, fta, ft_pct)) %>%
   select(-c(fgm_backcourt:fg_pct_backcourt))

@@ -3,21 +3,8 @@ library(tidyverse)
 
 #### Calculating Totals ####
 
-# Multiplying games played by shot averages
-# This'll give us totals by player
-totals_by_player <- combo %>%
-  mutate_at(.vars = vars(fgm_restricted_area, fga_restricted_area,
-                         `fgm_in_the_paint_(non-ra)`,
-                         `fga_in_the_paint_(non-ra)`,
-                         `fgm_mid-range`, `fga_mid-range`,
-                         fgm_left_corner_3, fga_left_corner_3,
-                         fgm_right_corner_3, fga_right_corner_3,
-                         fgm_above_the_break_3, fga_above_the_break_3,
-                         ftm, fta),
-            .funs = ~ round(. * gp))
-
 # We'll then calculate grand totals and find associated FG%
-totals <- totals_by_player %>%
+league_totals <- combo_totals %>%
   summarize_at(.vars = vars(fgm_restricted_area, fga_restricted_area,
                             `fgm_in_the_paint_(non-ra)`,
                             `fga_in_the_paint_(non-ra)`,
@@ -60,7 +47,7 @@ combo %>%
   facet_wrap(~ fgp_type)
 
 # Let's look at point values for each shot range
-point_values <- totals %>%
+point_values <- league_totals %>%
   mutate_at(.vars = vars(fgp_restricted_area,
                          `fgp_in_the_paint_(non-ra)`,
                          `fgp_mid-range`,
@@ -80,7 +67,7 @@ point_values %>%
   geom_point(pch = 21, fill = "white", col = "black", size = 4)
 
 # We'll take a look at adjusting the value of mid-range shots
-point_values_adjusted <- totals %>%
+point_values_adjusted <- league_totals %>%
   mutate_at(.vars = vars(fgp_restricted_area,
                          `fgp_in_the_paint_(non-ra)`,
                          ftp),
