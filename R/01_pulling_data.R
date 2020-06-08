@@ -102,5 +102,4 @@ combo <- shot_range_df %>%
 combo_totals <- range_totals_df %>%
   inner_join(traditional_totals_df %>%
                select(player_id, pts, gp, fgm, fga, fg_pct,
-                      fg3m, fg3a, fg3_pct, ftm, fta, ft_pct)) %>%
-  select(-c(fgm_backcourt:fg_pct_backcourt))
+                      fg3m, fg3a, fg3_pct, ftm, fta, ft_pct))
