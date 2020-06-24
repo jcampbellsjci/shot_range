@@ -45,6 +45,7 @@ new_values_player <- point_values_player %>%
 #### Summary Statistics ####
 
 # Let's see how team points would change
+# This would lead to a 2% increase in points
 new_values_player %>%
   summarize(old_pts = sum(old_pts, na.rm = T),
             new_pts = sum(new_pts, na.rm = T)) %>%
@@ -58,3 +59,24 @@ new_values_player %>%
             new_pts = sum(new_pts, na.rm = T)) %>%
   mutate(percent_increase = 1 - (old_pts / new_pts)) %>%
   arrange(desc(percent_increase))
+
+# Looking at percentage of points by area for each team
+team_percentages <- new_values_player %>%
+  group_by(team_abbreviation) %>%
+  summarize_at(.vars = vars(old_pts,
+                            fgm_restricted_area_pts:`fgm_mid-range_pts`),
+               .funs = list(~ sum(., na.rm = T))) %>%
+  group_by(team_abbreviation) %>%
+  mutate_at(.vars = vars(fgm_restricted_area_pts:`fgm_mid-range_pts`),
+               .funs = list(percentage = ~ . / old_pts)) %>%
+  ungroup()
+
+team_percentages %>%
+  mutate(team_abbreviation = fct_reorder(
+    team_abbreviation, `fgm_mid-range_pts_percentage`)) %>%
+  gather(fgm_restricted_area_pts_percentage:`fgm_mid-range_pts_percentage`,
+         key = shot_area, value = percentage) %>%
+  ggplot(aes(x = team_abbreviation, y = percentage, fill = shot_area)) +
+  geom_col(position = "fill") +
+  coord_flip() +
+  theme(legend.position = "top")
