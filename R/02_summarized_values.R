@@ -1,5 +1,8 @@
 library(tidyverse)
 
+combo <- read_csv("data/per_game.csv")
+combo_totals <- read_csv("data/totals.csv")
+
 
 #### Calculating Totals ####
 

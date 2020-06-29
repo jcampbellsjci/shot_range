@@ -103,3 +103,9 @@ combo_totals <- range_totals_df %>%
   inner_join(traditional_totals_df %>%
                select(player_id, pts, gp, fgm, fga, fg_pct,
                       fg3m, fg3a, fg3_pct, ftm, fta, ft_pct))
+
+
+#### Writing to File ####
+
+write_csv(combo, "data/per_game.csv")
+write_csv(combo_totals, "data/totals.csv")

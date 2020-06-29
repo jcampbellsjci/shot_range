@@ -1,5 +1,7 @@
 library(tidyverse)
 
+combo_totals <- read_csv("data/totals.csv")
+
 
 #### Calculating New Stat Values ####
 
