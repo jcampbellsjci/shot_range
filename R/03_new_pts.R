@@ -1,5 +1,6 @@
 library(tidyverse)
 
+combo <- read_csv("data/per_game.csv")
 combo_totals <- read_csv("data/totals.csv")
 
 
@@ -79,6 +80,38 @@ team_percentages %>%
   gather(fgm_restricted_area_pts_percentage:`fgm_mid-range_pts_percentage`,
          key = shot_area, value = percentage) %>%
   ggplot(aes(x = team_abbreviation, y = percentage, fill = shot_area)) +
+  geom_col(position = "fill") +
+  coord_flip() +
+  theme(legend.position = "top")
+
+# Plotting the top % increases for players
+new_values_player %>%
+  filter(gp > (.7 * 65)) %>%
+  mutate(ppg_inc_perc = 1 - (old_ppg / new_ppg)) %>%
+  top_n(n = 10, wt = ppg_inc_perc) %>%
+  mutate(player_name = fct_reorder(player_name, ppg_inc_perc)) %>%
+  ggplot(aes(x = player_name, y = ppg_inc_perc)) +
+  geom_col() +
+  coord_flip()
+new_values_player %>%
+  filter(gp > (.7 * 65)) %>%
+  mutate(ppg_inc_perc = 1 - (old_ppg / new_ppg)) %>%
+  top_n(n = -10, wt = ppg_inc_perc) %>%
+  mutate(player_name = fct_reorder(player_name, -ppg_inc_perc)) %>%
+  ggplot(aes(x = player_name, y = ppg_inc_perc)) +
+  geom_col() +
+  coord_flip()
+# Curious the location breakdown of some of these really low players
+# Either shooting in the restricted area or from 3
+combo %>%
+  filter(player_name %in% (new_values_player %>%
+                             filter(gp > (.7 * 65)) %>%
+                             mutate(ppg_inc_perc =
+                                      1 - (old_ppg / new_ppg)) %>%
+                             top_n(n = -10,
+                                   wt = ppg_inc_perc))$player_name) %>%
+  gather(contains("fga"), key = location, value = avg_attempts) %>%
+  ggplot(aes(x = player_name, y = avg_attempts, fill = location)) +
   geom_col(position = "fill") +
   coord_flip() +
   theme(legend.position = "top")
