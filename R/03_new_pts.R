@@ -1,3 +1,4 @@
+library(scales)
 library(tidyverse)
 
 combo <- read_csv("data/per_game.csv")
@@ -44,6 +45,11 @@ new_values_player <- point_values_player %>%
   mutate(ppg_difference = new_ppg - old_ppg,
          ppg_percent_inc = 1 - (old_ppg / new_ppg))
 
+write_csv(new_values_player %>%
+            select(player_name, team_abbreviation, old_ppg, new_ppg,
+                   ppg_difference, ppg_percent_inc),
+          "data/player_new_values.csv")
+
 
 #### Summary Statistics ####
 
@@ -82,8 +88,19 @@ team_percentages %>%
   ggplot(aes(x = team_abbreviation, y = percentage, fill = shot_area)) +
   geom_col(position = "fill") +
   coord_flip() +
-  theme(legend.position = "top")
+  theme(legend.position = "top") +
+  guides(fill = guide_legend(nrow = 4, byrow = TRUE)) +
+  labs(x = "Percentage of Points", y = "Team", fill = "Shot Location")
 
+write_csv(
+  team_percentages %>%
+    select(team_abbreviation,
+           fgm_restricted_area_pts_percentage:`fgm_in_the_paint_(non-ra)_pts_percentage`,
+           `fgm_mid-range_pts_percentage`,
+           fgm_left_corner_3_pts_percentage:fgm_above_the_break_3_pts_percentage,
+           ftm_pts_percentage),
+  "data/team_pts_by_location.csv")
+          
 # Plotting the top % increases for players
 new_values_player %>%
   filter(gp > (.7 * 65)) %>%
@@ -92,7 +109,9 @@ new_values_player %>%
   mutate(player_name = fct_reorder(player_name, ppg_inc_perc)) %>%
   ggplot(aes(x = player_name, y = ppg_inc_perc)) +
   geom_col() +
-  coord_flip()
+  scale_y_continuous(labels = percent) +
+  coord_flip() +
+  labs(y = "PPG Percent Increase", x = "Player")
 new_values_player %>%
   filter(gp > (.7 * 65)) %>%
   mutate(ppg_inc_perc = 1 - (old_ppg / new_ppg)) %>%
@@ -100,7 +119,9 @@ new_values_player %>%
   mutate(player_name = fct_reorder(player_name, -ppg_inc_perc)) %>%
   ggplot(aes(x = player_name, y = ppg_inc_perc)) +
   geom_col() +
-  coord_flip()
+  scale_y_continuous(labels = percent) +
+  coord_flip() +
+  labs(y = "PPG Percent Increase", x = "Player")
 # Curious the location breakdown of some of these really low players
 # Either shooting in the restricted area or from 3
 combo %>%
@@ -113,5 +134,24 @@ combo %>%
   gather(contains("fga"), key = location, value = avg_attempts) %>%
   ggplot(aes(x = player_name, y = avg_attempts, fill = location)) +
   geom_col(position = "fill") +
+  scale_y_continuous(labels = percent) +
   coord_flip() +
-  theme(legend.position = "top")
+  guides(fill = guide_legend(ncol = 2, bycol = TRUE)) +
+  theme(legend.position = "top") +
+  labs(x = "Player", y = "Percent of Attempts", fill = "Shot Location")
+# Doing same thing for top
+combo %>%
+  filter(player_name %in% (new_values_player %>%
+                             filter(gp > (.7 * 65)) %>%
+                             mutate(ppg_inc_perc =
+                                      1 - (old_ppg / new_ppg)) %>%
+                             top_n(n = 10,
+                                   wt = ppg_inc_perc))$player_name) %>%
+  gather(contains("fga"), key = location, value = avg_attempts) %>%
+  ggplot(aes(x = player_name, y = avg_attempts, fill = location)) +
+  geom_col(position = "fill") +
+  scale_y_continuous(labels = percent) +
+  coord_flip() +
+  guides(fill = guide_legend(ncol = 2, bycol = TRUE)) +
+  theme(legend.position = "top") +
+  labs(x = "Player", y = "Percent of Attempts", fill = "Shot Location")

@@ -64,10 +64,17 @@ point_values <- league_totals %>%
 point_values %>%
   gather(fgp_restricted_area_value:fgp_above_the_break_3_value,
          key = location, value = value) %>%
+  mutate(location = fct_reorder(location, value)) %>%
+  mutate(location = fct_relabel(location,
+                                ~c("in_the_paint", "mid_range",
+                                   "above_the_break_3",
+                                   "right_corner_3", "left_corner_3",
+                                   "restricted_area", "free_throw"))) %>%
   ggplot(aes(x = value, y = location)) +
   geom_segment(aes(x = 0, y = location,
                    xend = value, yend = location)) +
-  geom_point(pch = 21, fill = "white", col = "black", size = 4)
+  geom_point(pch = 22, fill = "white", col = "black", size = 4) +
+  labs(x = "Expected Point Value", y = "Shot Location")
 
 # We'll take a look at adjusting the value of mid-range shots
 point_values_adjusted <- league_totals %>%
@@ -84,7 +91,14 @@ point_values_adjusted <- league_totals %>%
 point_values_adjusted %>%
   gather(fgp_restricted_area_value:fgp_above_the_break_3_value,
          key = location, value = value) %>%
+  mutate(location = fct_reorder(location, value)) %>%
+  mutate(location = fct_relabel(location,
+                                ~c("in_the_paint", "mid_range",
+                                   "above_the_break_3",
+                                   "right_corner_3", "left_corner_3",
+                                   "restricted_area", "free_throw"))) %>%
   ggplot(aes(x = value, y = location)) +
   geom_segment(aes(x = 0, y = location,
                    xend = value, yend = location)) +
-  geom_point(pch = 21, fill = "white", col = "black", size = 4)
+  geom_point(pch = 22, fill = "white", col = "black", size = 4) +
+  labs(x = "Expected Point Value", y = "Shot Location")
